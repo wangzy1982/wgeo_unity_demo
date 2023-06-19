@@ -15,6 +15,4 @@ public class Test : MonoBehaviour
         var meshFilter = gameObject.GetComponent<MeshFilter>();
         meshFilter.mesh = mesh;
     }
-
-    int i;
 }

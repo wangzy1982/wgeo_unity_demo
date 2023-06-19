@@ -32,11 +32,40 @@ public class wgeo
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Quaternion
+    {
+        public double X;
+        public double Y;
+        public double Z;
+        public double W;
+
+        public Quaternion(double x, double y, double z, double w)
+        {
+            this.X = x;
+            this.Y = y;
+            this.Z = z;
+            this.W = w;
+        }
+    }
+
+    [DllImport("wgeo_api")]
+    public static extern IntPtr NewArc3d(ref Vector3 center, double radius, ref Quaternion rotation, ref Interval t_interval);
+
+    [DllImport("wgeo_api")]
+    public static extern void FreeCurve3d(IntPtr curve);
+
     [DllImport("wgeo_api")]
     public static extern IntPtr NewSphere(ref Vector3 center, double radius, ref Interval u_interval, ref Interval v_interval);
 
     [DllImport("wgeo_api")]
     public static extern void FreeSurface(IntPtr surface);
+
+    [DllImport("wgeo_api")]
+    public static extern IntPtr NewCurve3dFeature(IntPtr curve);
+
+    [DllImport("wgeo_api")]
+    public static extern void FreeCurve3dFeature(IntPtr curve_feature);
 
     [DllImport("wgeo_api")]
     public static extern IntPtr NewSurfaceFeature(IntPtr surface);
@@ -67,6 +96,26 @@ public class wgeo
 
     [DllImport("wgeo_api")]
     public static extern IntPtr GetMeshTriangles(IntPtr mesh);
+
+    [DllImport("wgeo_api")]
+    public static extern IntPtr Curve3dToPolyline(IntPtr curve_feature, double unit_epsilon);
+
+    [DllImport("wgeo_api")]
+    public static extern void FreePolyline(IntPtr polyline);
+
+    [DllImport("wgeo_api")]
+    public static extern int GetPolylineVertexCount(IntPtr polyline);
+
+    [DllImport("wgeo_api")]
+    public static extern IntPtr GetPolylineVertices(IntPtr polyline);
+
+    [DllImport("wgeo_api")]
+    public static extern bool IsPolylineClosed(IntPtr polyline);
+
+    public static IntPtr NewArc3d(Vector3 center, double radius, Quaternion rotation, Interval t_interval)
+    {
+        return NewArc3d(ref center, radius, ref rotation, ref t_interval);
+    }
 
     public static IntPtr NewSphere(Vector3 center, double radius, Interval u_interval, Interval v_interval)
     {
@@ -131,6 +180,29 @@ public class wgeo
 
         FreeMesh(mesh);
         return unity_mesh;
+    }
+
+    public static Polyline3 Curve3dToUnityPolyline3(IntPtr curve_feature, double unit_epsilon)
+    {
+        Polyline3 unity_polyline = new Polyline3();
+        IntPtr polyline = Curve3dToPolyline(curve_feature, unit_epsilon);
+        unsafe
+        {
+            int vertex_count = GetPolylineVertexCount(polyline);
+            double* p_vertices = (double*)GetPolylineVertices(polyline).ToPointer();
+            bool closed = IsPolylineClosed(polyline);
+            UnityEngine.Vector3[] vertices = new UnityEngine.Vector3[vertex_count];
+            for (int i = 0; i < vertex_count; i++)
+            {
+                int j = i * 3;
+                vertices[i] = new UnityEngine.Vector3((float)p_vertices[j], (float)p_vertices[j + 1], (float)p_vertices[j + 2]);
+            }
+            unity_polyline.Vertices = vertices;
+            unity_polyline.Closed = closed;
+        }
+
+        FreeMesh(polyline);
+        return unity_polyline;
     }
 
 }

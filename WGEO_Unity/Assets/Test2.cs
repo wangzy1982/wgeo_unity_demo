@@ -7,14 +7,14 @@ public class Test2 : MonoBehaviour
 {
     void Start()
     {
-        var surface = wgeo.NewSphere(new wgeo.Vector3(0, 0, 0), 1, new wgeo.Interval(0, Math.PI), new wgeo.Interval(Math.PI, Math.PI * 2));
-        var surfaceFeature = wgeo.NewSurfaceFeature(surface);
-        var mesh = wgeo.SurfaceToUnityMesh(surfaceFeature, true, true, Math.PI / 7);
-        wgeo.FreeSurfaceFeature(surfaceFeature);
-        wgeo.FreeSurface(surface);
-        var meshFilter = gameObject.GetComponent<MeshFilter>();
-        meshFilter.mesh = mesh;
+        var arc3d = wgeo.NewArc3d(new wgeo.Vector3(0, 0, 0), 1, new wgeo.Quaternion(0, 0, 0, 1), new wgeo.Interval(0, Math.PI * 2));
+        var curveFeature = wgeo.NewCurve3dFeature(arc3d);
+        var polyline = wgeo.Curve3dToUnityPolyline3(curveFeature, Math.PI / 7);
+        wgeo.FreeCurve3dFeature(curveFeature);
+        wgeo.FreeCurve3d(arc3d);
+        var lineRenderer = gameObject.GetComponent<LineRenderer>();
+        lineRenderer.loop = polyline.Closed;
+        lineRenderer.positionCount = polyline.Vertices.Length;
+        lineRenderer.SetPositions(polyline.Vertices);
     }
-
-    int i;
 }
